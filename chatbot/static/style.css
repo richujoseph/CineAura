@@ -1,0 +1,13 @@
+p {
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+strong {
+  color: #ff9900;
+}
+
+em {
+  color: #00cccc;
+  font-style: italic;
+}

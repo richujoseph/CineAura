@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CineAura - Your Movie Companion</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+      min-height: 100vh;
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+
+    /* Animated background particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 2rem 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(45deg, #ff6b6b, #ffd93d, #6bcf7f, #4d96ff);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientShift 4s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+      margin-bottom: 0.5rem;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .tagline {
+      font-size: 1.2rem;
+      color: #a0a0a0;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+
+    /* Main container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Chat container */
+    .chat-container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chat-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #ff6b6b, #4ecdc4, transparent);
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Messages area */
+    .messages {
+      height: 500px;
+      overflow-y: auto;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      scrollbar-width: thin;
+      scrollbar-color: #ff6b6b transparent;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      border-radius: 3px;
+    }
+
+    /* Message bubbles */
+    .message {
+      margin: 1.5rem 0;
+      animation: messageSlide 0.5s ease-out;
+    }
+
+    @keyframes messageSlide {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .user-message {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .bot-message {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 70%;
+      padding: 1.5rem 2rem;
+      border-radius: 20px;
+      position: relative;
+      word-wrap: break-word;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+
+    .user-bubble {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: white;
+      box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+    }
+
+    .bot-bubble {
+      background: linear-gradient(135deg, #4ecdc4, #44a08d);
+      color: white;
+      box-shadow: 0 10px 25px rgba(78, 205, 196, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bot-bubble::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #4ecdc4, #6bcf7f, #4ecdc4);
+      opacity: 0.6;
+    }
+
+    /* Enhanced text formatting for bot messages */
+    .bot-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .bot-content h3, .bot-content h4 {
+      color: #ffffff;
+      margin: 0.5rem 0;
+      font-weight: 600;
+    }
+
+    .bot-content p {
+      margin: 0.8rem 0;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .bot-content strong {
+      color: #ffd93d;
+      font-weight: 700;
+    }
+
+    .bot-content em {
+      color: #ff9ff3;
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    /* Movie titles styling */
+    .movie-title {
+      color: #ffd93d;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* List styling within bot messages */
+    .bot-list {
+      margin: 1rem 0;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .bot-list-item {
+      margin: 0.8rem 0;
+      padding: 0.5rem 0;
+      border-left: 3px solid #ffd93d;
+      padding-left: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-left: 0.5rem;
+    }
+
+    /* Quote styling */
+    .bot-quote {
+      font-style: italic;
+      color: #b8e6d3;
+      border-left: 3px solid #4ecdc4;
+      padding-left: 1rem;
+      margin: 1rem 0;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .user-avatar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .bot-avatar {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+    }
+
+    /* Input area */
+    .input-container {
+      position: relative;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-field:focus {
+      border-color: #ff6b6b;
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+      transform: scale(1.02);
+    }
+
+    .send-button {
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .send-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .send-button:hover::before {
+      left: 100%;
+    }
+
+    .send-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+    }
+
+    .send-button:active {
+      transform: translateY(0);
+    }
+
+    /* Loading animation */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 1rem 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      margin: 1rem 0;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ecdc4;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
+    }
+
+    /* Welcome message */
+    .welcome {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 1rem;
+      }
+      
+      .logo {
+        font-size: 2.5rem;
+      }
+      
+      .chat-container {
+        padding: 1.5rem;
+      }
+      
+      .messages {
+        height: 400px;
+      }
+      
+      .message-bubble {
+        max-width: 85%;
+      }
+      
+      .input-container {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .input-field, .send-button {
+        width: 100%;
+      }
+    }
+
+    /* Glow effects */
+    .glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
+      to { text-shadow: 0 0 30px rgba(255, 107, 107, 0.8); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated background particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="header">
+    <h1 class="logo glow">CineAura</h1>
+    <p class="tagline">Your Ultimate Movie Companion</p>
+  </div>
+
+  <div class="container">
+    <div class="chat-container">
+      <div class="messages" id="messages">
+        <div class="welcome">
+          <h3>🎬 Welcome to CineAura! 🎬</h3>
+          <p>Ask me anything about movies, actors, directors, or get personalized recommendations. I'm here to help you discover your next favorite film!</p>
+        </div>
+      </div>
+
+      <div class="typing-indicator" id="typingIndicator">
+        <span>CineAura is thinking</span>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+
+      <form class="input-container" id="chatForm">
+        <input 
+          type="text" 
+          class="input-field" 
+          id="messageInput" 
+          placeholder="Ask me about movies, actors, recommendations..." 
+          required 
+        />
+        <button type="submit" class="send-button">
+          <span>Send ✨</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Create floating particles
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 50;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 6 + 's';
+        particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // Initialize particles
+    createParticles();
+
+    // Chat functionality
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('messageInput');
+    const messages = document.getElementById('messages');
+    const typingIndicator = document.getElementById('typingIndicator');
+
+    function addMessage(content, isUser = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = `message-avatar ${isUser ? 'user-avatar' : 'bot-avatar'}`;
+      avatar.textContent = isUser ? '👤' : '🎬';
+      
+      const bubble = document.createElement('div');
+      bubble.className = `message-bubble ${isUser ? 'user-bubble' : 'bot-bubble'}`;
+      
+      if (isUser) {
+        bubble.textContent = content;
+      } else {
+        // Enhanced formatting for bot messages
+        const botContent = document.createElement('div');
+        botContent.className = 'bot-content';
+        botContent.innerHTML = formatBotMessage(content);
+        bubble.appendChild(botContent);
+      }
+      
+      if (isUser) {
+        messageDiv.appendChild(bubble);
+        messageDiv.appendChild(avatar);
+      } else {
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+      }
+      
+      messages.appendChild(messageDiv);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function formatBotMessage(content) {
+      // Escape HTML first to prevent XSS
+      const escaped = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      
+      let formatted = escaped;
+
+      // Format movie titles between ** **
+      formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<span class="movie-title">$1</span>');
+      
+      // Format emphasis between * *
+      formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      
+      // Format years in parentheses
+      formatted = formatted.replace(/\((\d{4})\)/g, '<strong>($1)</strong>');
+      
+      // Create structured list from numbered/bulleted content
+      const lines = formatted.split('\n').filter(line => line.trim());
+      let processedLines = [];
+      let inList = false;
+      
+      for (let line of lines) {
+        const trimmed = line.trim();
+        
+        // Check if line starts with number, bullet, or **
+        if (/^(\d+\.|\*\*|\•|\-|\*)/.test(trimmed)) {
+          if (!inList) {
+            processedLines.push('<div class="bot-list">');
+            inList = true;
+          }
+          
+          // Clean up the line and wrap in list item
+          const cleanLine = trimmed.replace(/^(\d+\.|\*\*|\•|\-|\*)\s*/, '');
+          processedLines.push(`<div class="bot-list-item">${cleanLine}</div>`);
+        } else {
+          if (inList) {
+            processedLines.push('</div>');
+            inList = false;
+          }
+          
+          if (trimmed) {
+            processedLines.push(`<p>${trimmed}</p>`);
+          }
+        }
+      }
+      
+      if (inList) {
+        processedLines.push('</div>');
+      }
+      
+      return processedLines.join('');
+    }
+
+    function showTyping() {
+      typingIndicator.style.display = 'flex';
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function hideTyping() {
+      typingIndicator.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const userInput = input.value.trim();
+      if (!userInput) return;
+
+      // Add user message
+      addMessage(userInput, true);
+      input.value = '';
+      
+      // Show typing indicator
+      showTyping();
+
+      try {
+        // Send to backend
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `message=${encodeURIComponent(userInput)}`
+        });
+
+        const data = await response.json();
+        
+        // Hide typing indicator
+        hideTyping();
+        
+        // Add bot response
+        addMessage(data.reply || 'Sorry, I encountered an error. Please try again.');
+      } catch (error) {
+        hideTyping();
+        addMessage('Sorry, I\'m having trouble connecting. Please check your connection and try again.');
+        console.error('Error:', error);
+      }
+      
+      input.focus();
+    });
+
+    // Auto-focus input
+    input.focus();
+
+    // Add some sparkle to the input focus
+    input.addEventListener('focus', () => {
+      input.style.transform = 'scale(1.02)';
+    });
+
+    input.addEventListener('blur', () => {
+      input.style.transform = 'scale(1)';
+    });
+  </script>
+</body>
+</html>
