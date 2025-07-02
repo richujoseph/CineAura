@@ -35,7 +35,7 @@ def query_groq_cloud(user_input):
 
     response = requests.post(url, headers=headers, json=data)
     result = response.json()
-    print(result)  # 👈 See what the actual JSON structure is
+    print(result)
     return result
 
 @app.route('/')
