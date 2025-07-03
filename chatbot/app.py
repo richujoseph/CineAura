@@ -44,16 +44,13 @@ def home():
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    user_input = request.form.get("message")  # ✅ Match form-urlencoded
     try:
-        data = request.get_json() 
-        user_input = request.form.get("message") 
-
         response = query_groq_cloud(user_input)
         reply = response['choices'][0]['message']['content']
-
         return jsonify({'reply': reply})
     except Exception as e:
-        print("Error:", e)
+        print(f"[SERVER ERROR]: {e}")
         return jsonify({'reply': "Sorry, something went wrong on the server 😓"}), 500
 
 if __name__ == "__main__":
