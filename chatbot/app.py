@@ -46,7 +46,7 @@ def home():
 def chat():
     try:
         data = request.get_json() 
-        user_input = data.get('message')  
+        user_input = request.form.get("message") 
 
         response = query_groq_cloud(user_input)
         reply = response['choices'][0]['message']['content']
