@@ -44,11 +44,17 @@ def home():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_input = request.form['message']
-    response = query_groq_cloud(user_input)
+    try:
+        data = request.get_json() 
+        user_input = data.get('message')  
 
-    reply = response['choices'][0]['message']['content']
-    return jsonify({'reply': reply}) 
+        response = query_groq_cloud(user_input)
+        reply = response['choices'][0]['message']['content']
+
+        return jsonify({'reply': reply})
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'reply': "Sorry, something went wrong on the server 😓"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
